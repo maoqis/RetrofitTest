@@ -9,10 +9,10 @@ import retrofit2.http.GET;
 
 
 public interface GitHubService{
-  @GET("/api/home/v2/recommendVideo.do")
+  @GET("/api/user/list.do")
   Call<CommonBean> listCommonBean();
 
-  @GET("/api/home/v2/recommendVideo.do")
+  @GET("/api/user/list1.do")
   Observable<CommonBean> listCommonBeanRxJava();
   Flowable<CommonBean> listCommonBeanRxJavaFlow();
 

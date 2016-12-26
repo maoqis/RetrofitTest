@@ -1,27 +1,20 @@
 package com.bobo.retrofittest;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.bobo.retrofittest.retofit.CommonBean;
 import com.bobo.retrofittest.retofit.GitHubService;
-import com.google.gson.Gson;
-import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import com.trello.rxlifecycle.RxLifecycle;
 import com.trello.rxlifecycle.android.ActivityEvent;
-import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
-import io.reactivex.android.plugins.RxAndroidPlugins;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -29,8 +22,6 @@ import io.victoralbertos.rxlifecycle_interop.Rx2Activity;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends Rx2Activity {
     private static final String TAG = "MainActivity";
@@ -40,22 +31,28 @@ public class MainActivity extends Rx2Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String host = "your host";
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(host+"/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build();
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl(host + "/")
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+//                .build();
 
-        GitHubService service = retrofit.create(GitHubService.class);
+//        GitHubService service = retrofit.create(GitHubService.class);
 //        testRetrofit(service);
-        testRetrofitRxJava(service);
+//        testRetrofitRxJava(service);
+        findViewById(R.id.activity_main).setOnClickListener(v -> {
+            testApi(() -> Toast.makeText(MainActivity.this,"123",Toast.LENGTH_SHORT).show() );
+        });
 
-        finish();
+//        finish();
 
     }
 
-    private void testApi() {
-
+    private void testApi(AI ai) {
+        ai.run();
+    }
+    public interface AI{
+        public void run();
     }
 
     private void testRetrofitRxJava(GitHubService service) {
@@ -88,9 +85,13 @@ public class MainActivity extends Rx2Activity {
                 .compose(this.<CommonBean>bindUntilEvent2x(ActivityEvent.DESTROY, BackpressureStrategy.DROP))
                 .observeOn(Schedulers.io())
                 .subscribe(subscriber);
-        ;
+        commonBeanObservable.subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
+                .compose(this.<CommonBean>bindUntilEvent2x(ActivityEvent.DESTROY, BackpressureStrategy.DROP))
+                .observeOn(Schedulers.io()).subscribe(commonBean -> {
+            Log.d(TAG, "onNext() called with: commonBean = [" + commonBean + "]");
+        });
     }
-
 
 
     Subscriber<CommonBean> subscriber = new Subscriber<CommonBean>() {
@@ -119,10 +120,6 @@ public class MainActivity extends Rx2Activity {
 
     private void testRetrofitRxJavaF(GitHubService service) {
         Flowable<CommonBean> commonBeanObservable = service.listCommonBeanRxJavaFlow();
-        commonBeanObservable.
-                subscribeOn(Schedulers.io())
-                .unsubscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread()).subscribe(subscriber);
         commonBeanObservable.
 //                指定 subscribe()所发生的线程，即 Observable.OnSubscribe被激活时所处的线程。或者叫做事件产生的线程。
         subscribeOn(Schedulers.io())
